@@ -66,11 +66,21 @@ func parseTypeName(node nodes.Node) (*ast.TypeName, error) {
 	if err != nil {
 		return nil, fmt.Errorf("parse type name: %w", err)
 	}
-	return &ast.TypeName{
-		Catalog: rel.Catalog,
-		Schema:  rel.Schema,
-		Name:    rel.Name,
-	}, nil
+	switch n := node.(type) {
+	case *nodes.TypeName:
+		return &ast.TypeName{
+			Catalog: rel.Catalog,
+			Schema:  rel.Schema,
+			Name:    rel.Name,
+			Setof:   n.Setof,
+		}, nil
+	default:
+		return &ast.TypeName{
+			Catalog: rel.Catalog,
+			Schema:  rel.Schema,
+			Name:    rel.Name,
+		}, nil
+	}
 }
 
 func parseTableName(node nodes.Node) (*ast.TableName, error) {
@@ -180,8 +190,7 @@ func NewParser() *Parser {
 	return &Parser{}
 }
 
-type Parser struct {
-}
+type Parser struct{}
 
 var errSkip = errors.New("skip stmt")
 
@@ -254,7 +263,6 @@ func translate(node nodes.Node) (ast.Node, error) {
 
 	case nodes.AlterObjectSchemaStmt:
 		switch n.ObjectType {
-
 		case nodes.OBJECT_TABLE:
 			tbl, err := parseTableName(*n.Relation)
 			if err != nil {

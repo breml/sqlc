@@ -165,6 +165,14 @@ func postgresType(r *compiler.Result, col *compiler.Column, settings config.Comb
 					return "sql.NullString"
 				}
 			}
+			for _, table := range schema.Tables {
+				if rel.Name == table.Rel.Name && rel.Schema == schema.Name {
+					if schema.Name == r.Catalog.DefaultSchema {
+						return StructName(table.Rel.Name, settings)
+					}
+					return StructName(schema.Name+"_"+table.Rel.Name, settings)
+				}
+			}
 		}
 		if debug.Active {
 			log.Printf("unknown PostgreSQL type: %s\n", columnType)
